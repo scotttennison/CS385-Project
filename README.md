@@ -3,7 +3,7 @@
 A **full-stack cloud application** for managing document lifecycles with automatic deletion based on retention policies. Built on AWS with React frontend and Node.js/Express backend.
 
 **Status:** ✅ MVP Complete & Deployed  
-**Frontend:** https://cs385-frontend-q3wvzwoe2-scottennison7gmailcoms-projects.vercel.app/login 
+**Frontend:** <https://cs385-frontend-q3wvzwoe2-scottennison7gmailcoms-projects.vercel.app/login> 
 **API:** <https://mnyt0kl257.execute-api.us-west-2.amazonaws.com/dev>  
 
 ---
