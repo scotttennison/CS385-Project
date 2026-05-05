@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import 'bootstrap/dist/css/bootstrap.min.css';  // ADD THIS LINE
 import LoginPage from './pages/LoginPage';
 import UploadPage from './pages/UploadPage';
+import ConfirmationPage from './pages/ConfirmationPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,6 +41,7 @@ function App() {
           path="/"
           element={<Navigate to={isLoggedIn ? '/upload' : '/login'} />}
         />
+        <Route path="/confirm" element={<ConfirmationPage />} />
       </Routes>
     </Router>
   );
