@@ -83,7 +83,12 @@ CS385-Project/
 │   ├── package.json
 │   └── .vercel/                   # Vercel deployment config
 │
-└── README.md                       # This file
+├── Cloudformation/                # Infrastructure as Code
+│   ├── cs385-template.yaml        # Full AWS stack definition
+│   └── README.md                  # Deployment instructions
+│
+├── vercel.json                    # Vercel build & routing config
+└── README.md                      # This file
 ```
 
 ---
@@ -382,7 +387,7 @@ curl -X GET http://localhost:3001/files/file-id-here \
 
 ### **Person 4: DevOps & Infrastructure (In Progress)**
 
-- [ ] Write Terraform for entire stack
+- ✅ CloudFormation template for entire AWS stack (`Cloudformation/cs385-template.yaml`)
 - [ ] Set up GitHub Actions CI/CD
 - [ ] Auto-deploy on git push
 - [ ] Environment variable management
@@ -418,6 +423,19 @@ Upload zip to AWS Lambda console.
 - GET /files → CS385-API Lambda
 - GET /files/{id} → CS385-API Lambda
 - CORS enabled for localhost:3000 and Vercel domain
+
+### **Infrastructure (CloudFormation)**
+
+Deploy the entire AWS stack in one command:
+
+```bash
+aws cloudformation deploy \
+  --template-file Cloudformation/cs385-template.yaml \
+  --stack-name cs385-stack \
+  --capabilities CAPABILITY_NAMED_IAM
+```
+
+See [Cloudformation/README.md](Cloudformation/README.md) for full deployment instructions and parameter options.
 
 ---
 
