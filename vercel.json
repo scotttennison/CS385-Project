@@ -1,5 +1,6 @@
 {
   "buildCommand": "cd cs385-frontend && npm install && npm run build",
   "outputDirectory": "cs385-frontend/build",
-  "devCommand": "cd cs385-frontend && npm start"
+  "devCommand": "cd cs385-frontend && npm start",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
