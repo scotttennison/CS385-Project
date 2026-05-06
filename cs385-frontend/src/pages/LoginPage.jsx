@@ -11,7 +11,6 @@ function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
 
-  const USER_POOL_ID = 'us-west-2_0gKOEyOGB';
   const CLIENT_ID = '63mgullqo4qp0igefff8ecqnh1';
   const CLIENT_SECRET = 'u2btemms0adgepfn7pjifss2gb7j2dlo6nkb1h6c2me84hkbvjm';
   const REGION = 'us-west-2';

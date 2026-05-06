@@ -8,6 +8,8 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "amazon-cognito-identity-js": "^6.3.16",
+    "aws-sdk": "^2.1693.0",
+    "crypto-js": "^4.2.0",
     "bootstrap": "^5.3.8",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
