@@ -1,0 +1,472 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CS385 Records Management System - CloudFormation Template'
+
+Parameters:
+  AccountId:
+    Type: String
+    Description: AWS Account ID
+    Default: '306015045828'
+  
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  S3BucketName:
+    Type: String
+    Description: S3 bucket name for documents
+    Default: cs385-documents-cf-306015045828
+
+  MetadataTableName:
+    Type: String
+    Default: cs385-metadata-cf
+    Description: DynamoDB metadata table name
+
+  AuditTableName:
+    Type: String
+    Default: cs385-audit-logs-cf
+    Description: DynamoDB audit logs table name
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: AWS Configuration
+        Parameters:
+          - AccountId
+          - Environment
+      - Label:
+          default: Resource Names
+        Parameters:
+          - S3BucketName
+          - MetadataTableName
+          - AuditTableName
+
+Resources:
+
+  # ==================== S3 BUCKET ====================
+  
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: CS385 Documents
+        - Key: Environment
+          Value: !Ref Environment
+
+  DocumentsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocumentsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaAccess
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt DocumentsBucket.Arn
+              - !Sub '${DocumentsBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                'aws:SourceAccount': !Ref AWS::AccountId
+
+  # ==================== DYNAMODB TABLES ====================
+
+  MetadataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref MetadataTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: fileId
+          AttributeType: S
+        - AttributeName: expirationDate
+          AttributeType: N
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: fileId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: expirationDate-index
+          KeySchema:
+            - AttributeName: expirationDate
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Name
+          Value: CS385 Metadata
+
+  AuditLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref AuditTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp_actionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp_actionId
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Name
+          Value: CS385 Audit Logs
+
+  # ==================== COGNITO ====================
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: CS385-UserPool-CF
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: CS385-WebApp-CF
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 5
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      PreventUserExistenceErrors: ENABLED
+
+  # ==================== IAM ROLE ====================
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cs385-lambda-role-cf
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::cs385-documents-*'
+                  - !Sub 'arn:aws:s3:::cs385-documents-*/*'
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cs385-*'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cs385-*/index/*'
+
+  # ==================== LAMBDA FUNCTIONS ====================
+
+  APILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: CS385-API-CF
+      Runtime: nodejs18.x
+      Handler: src/index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 60
+      MemorySize: 256
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'CS385 API - Update with your Lambda code' })
+            };
+          };
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref DocumentsBucket
+          METADATA_TABLE: !Ref MetadataTable
+          AUDIT_TABLE: !Ref AuditLogsTable
+          USER_POOL_ID: !Ref UserPool
+          CLIENT_ID: !Ref UserPoolClient
+      Tags:
+        - Key: Name
+          Value: CS385 API CF
+
+  DeletionSchedulerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: CS385-DeletionScheduler-CF
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 256
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          
+          s3 = boto3.client('s3')
+          dynamodb = boto3.resource('dynamodb')
+          
+          def lambda_handler(event, context):
+              bucket = os.environ['S3_BUCKET']
+              metadata_table = dynamodb.Table(os.environ['METADATA_TABLE'])
+              
+              # Query expired documents
+              now = int(datetime.now().timestamp())
+              
+              print(f"Checking for documents expired before {now}")
+              
+              deleted_count = 0
+              # TODO: Implement full deletion logic
+              
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps({'deleted': deleted_count})
+              }
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref DocumentsBucket
+          METADATA_TABLE: !Ref MetadataTable
+          AUDIT_TABLE: !Ref AuditLogsTable
+      Tags:
+        - Key: Name
+          Value: CS385 Deletion Scheduler CF
+
+  # ==================== API GATEWAY ====================
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: CS385-API-CF
+      Description: CS385 Records Management System API (CloudFormation)
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: upload
+
+  ApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref ApiResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APILambda.Arn}/invocations'
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiMethod
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: dev
+
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref APILambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*'
+
+  # ==================== EVENTBRIDGE ====================
+
+  DeletionEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: cs385-deletion-schedule-cf
+      Description: Trigger document deletion daily at midnight UTC (CloudFormation)
+      ScheduleExpression: cron(0 0 * * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt DeletionSchedulerLambda.Arn
+          Id: CS385DeletionTarget-CF
+
+  LambdaEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeletionSchedulerLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DeletionEventRule.Arn
+
+  # ==================== SQS DLQ ====================
+
+  DeletionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: cs385-deletion-dlq-cf
+      MessageRetentionPeriod: 1209600
+
+Outputs:
+  S3BucketName:
+    Description: S3 bucket for document storage
+    Value: !Ref DocumentsBucket
+    Export:
+      Name: CS385-S3-Bucket
+
+  S3BucketArn:
+    Description: ARN of S3 bucket
+    Value: !GetAtt DocumentsBucket.Arn
+    Export:
+      Name: CS385-S3-Bucket-Arn
+
+  MetadataTableName:
+    Description: DynamoDB metadata table name
+    Value: !Ref MetadataTable
+    Export:
+      Name: CS385-Metadata-Table
+
+  MetadataTableArn:
+    Description: ARN of metadata table
+    Value: !GetAtt MetadataTable.Arn
+    Export:
+      Name: CS385-Metadata-Table-Arn
+
+  AuditTableName:
+    Description: DynamoDB audit logs table name
+    Value: !Ref AuditLogsTable
+    Export:
+      Name: CS385-Audit-Table
+
+  AuditTableArn:
+    Description: ARN of audit logs table
+    Value: !GetAtt AuditLogsTable.Arn
+    Export:
+      Name: CS385-Audit-Table-Arn
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+    Export:
+      Name: CS385-UserPool-Id
+
+  UserPoolArn:
+    Description: Cognito User Pool ARN
+    Value: !GetAtt UserPool.Arn
+    Export:
+      Name: CS385-UserPool-Arn
+
+  ClientId:
+    Description: Cognito App Client ID
+    Value: !Ref UserPoolClient
+    Export:
+      Name: CS385-Client-Id
+
+  APIEndpoint:
+    Description: API Gateway endpoint
+    Value: !Sub 'https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/dev'
+    Export:
+      Name: CS385-API-Endpoint
+
+  APILambdaArn:
+    Description: API Lambda function ARN
+    Value: !GetAtt APILambda.Arn
+    Export:
+      Name: CS385-API-Lambda-Arn
+
+  DeletionLambdaArn:
+    Description: Deletion Lambda function ARN
+    Value: !GetAtt DeletionSchedulerLambda.Arn
+    Export:
+      Name: CS385-Deletion-Lambda-Arn
+
+  LambdaRoleArn:
+    Description: Lambda execution role ARN
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: CS385-Lambda-Role-Arn
+
+  DeploymentSummary:
+    Description: Summary of deployed resources
+    Value: !Sub |
+      API Endpoint: https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/dev
+      S3 Bucket: ${DocumentsBucket}
+      Metadata Table: ${MetadataTable}
+      Audit Table: ${AuditLogsTable}
+      User Pool ID: ${UserPool}
+      Environment: ${Environment}
