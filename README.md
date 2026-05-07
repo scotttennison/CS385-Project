@@ -93,7 +93,7 @@ CS385-Project/
 
 ---
 
-## 🚀 What I Built
+## 🚀 What We Built
 
 ### **Phase 1: System Understanding**
 
@@ -326,7 +326,7 @@ Lambda (CS385-DeletionScheduler)
 
 ---
 
-## 🧪 Testing the MVP
+## 🧪 Testing the Cloud App
 
 ### **Test Upload**
 
@@ -360,38 +360,6 @@ curl -X GET http://localhost:3001/files \
 curl -X GET http://localhost:3001/files/file-id-here \
   -H "X-User-ID: user_12345"
 ```
-
----
-
-## 📈 What's Next
-
-### **Person 1: Frontend (Complete ✅)**
-
-- ✅ Login page
-- ✅ Upload component
-- ✅ File list component
-
-### **Person 2: Backend API (Complete ✅)**
-
-- ✅ REST API
-- ✅ 3 endpoints
-- ✅ Deployed to Lambda
-
-### **Person 3: Data & Security (In Progress)**
-
-- [ ] Review DynamoDB schemas
-- [ ] Create S3 bucket policies
-- [ ] Fine-tune IAM permissions
-- [ ] Implement row-level security
-- [ ] Audit log integrity checks
-
-### **Person 4: DevOps & Infrastructure (In Progress)**
-
-- ✅ CloudFormation template for entire AWS stack (`Cloudformation/cs385-template.yaml`)
-- [ ] Set up GitHub Actions CI/CD
-- [ ] Auto-deploy on git push
-- [ ] Environment variable management
-- [ ] Document deployment process
 
 ---
 
@@ -439,43 +407,7 @@ See [Cloudformation/README.md](Cloudformation/README.md) for full deployment ins
 
 ---
 
-## 📚 Learning Journey
 
-This project taught me:
-
-1. **React Basics**
-   - useState for form state
-   - useEffect for side effects
-   - React Router for navigation
-   - Component composition
-
-2. **REST APIs**
-   - Express routing
-   - Request/response handling
-   - Authentication with JWT
-   - Error handling
-
-3. **AWS Services**
-   - Lambda (serverless compute)
-   - API Gateway (HTTP routing)
-   - S3 (object storage)
-   - DynamoDB (NoSQL database)
-   - Cognito (identity management)
-   - CloudWatch (logging)
-
-4. **Cloud Architecture**
-   - Multi-tier application design
-   - Security (CORS, authentication, IAM)
-   - Scalability (serverless, managed services)
-   - Cost optimization (pay-per-use model)
-
-5. **DevOps**
-   - IaC concepts
-   - Deployment automation
-   - Environment variables
-   - Git workflows
-
----
 
 ## 🔗 Links
 
