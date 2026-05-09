@@ -2,13 +2,13 @@
 
 A **full-stack cloud application** for managing document lifecycles with automatic deletion based on retention policies. Built on AWS with React frontend and Node.js/Express backend.
 
-**Status:** ✅ MVP Complete & Deployed  
-**Frontend:** <[https://cs385-frontend-q3wvzwoe2-scottennison7gmailcoms-projects.vercel.app/login](https://cs385-frontend.vercel.app/login)> 
+**Status:**  MVP Complete & Deployed  
+**Frontend:** <https://cs385-frontend.vercel.app/login> 
 **API:** <https://mnyt0kl257.execute-api.us-west-2.amazonaws.com/dev>  
 
 ---
 
-## 🎯 What This Project Does
+##  What This Project Does
 
 Users can:
 
@@ -27,22 +27,22 @@ Users can:
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │           React Frontend (Vercel)                       │
-│  ├── Login Page (Cognito Auth)                         │
-│  ├── Upload Form (Select type + upload file)           │
-│  └── File List (Shows docs + expiration dates)         │
+│  ├── Login Page (Cognito Auth)                          │
+│  ├── Upload Form (Select type + upload file)            │
+│  └── File List (Shows docs + expiration dates)          │
 └──────────────────┬──────────────────────────────────────┘
                    │ (JWT Token + HTTP)
                    ↓
 ┌──────────────────────────────────────────────────────────┐
 │    API Gateway + Lambda (AWS)                            │
-│  ├── POST /upload     → Upload Handler Lambda           │
-│  ├── GET /files       → List user's files               │
-│  └── GET /files/{id}  → Get file details                │
+│  ├── POST /upload     → Upload Handler Lambda            │
+│  ├── GET /files       → List user's files                │
+│  └── GET /files/{id}  → Get file details                 │
 └──────────────────┬───────────────────────────────────────┘
                    │
         ┌──────────┼──────────┐
@@ -62,7 +62,7 @@ Users can:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CS385-Project/
@@ -93,72 +93,10 @@ CS385-Project/
 
 ---
 
-## 🚀 What We Built
-
-### **Phase 1: System Understanding**
-
-- ✅ Defined requirements (4 document types, automatic deletion, multi-tenant)
-- ✅ Identified core components (S3, DynamoDB, Lambda, Cognito, API Gateway)
-- ✅ Locked in retention rules (7yr, 5yr, 3yr, 10yr)
-- ✅ Designed security model (user-based isolation, Cognito auth)
-
-### **Phase 2: Architecture Design**
-
-- ✅ Data flow: Upload → S3 → Lambda → DynamoDB → Daily Deletion
-- ✅ DynamoDB schemas (metadata table, audit log table)
-- ✅ API endpoints (POST /upload, GET /files, GET /files/{id})
-- ✅ Cross-account IAM roles (for team collaboration)
-
-### **Phase 3: Infrastructure Setup**
-
-- ✅ AWS Cognito User Pool (`CS385-UserPool`)
-- ✅ S3 Bucket (`cs385-documents-306015045828`)
-- ✅ DynamoDB Tables (`cs385-metadata`, `cs385-audit-logs`)
-- ✅ API Gateway with 3 REST endpoints
-- ✅ Lambda Functions:
-  - `CS385-UploadHandler` — Triggered on S3 upload, stores metadata
-  - `CS385-DeletionScheduler` — Runs daily, deletes expired files
-  - `CS385-API` — Express REST API
-
-### **Phase 4: Backend Development**
-
-- ✅ Built REST API with Node.js/Express
-- ✅ Implemented Cognito JWT authentication
-- ✅ Created 3 working endpoints:
-  - `POST /upload` — Upload file, store metadata, calculate expiration
-  - `GET /files` — List user's files from DynamoDB
-  - `GET /files/{fileId}` — Get single file details
-- ✅ Integrated with S3, DynamoDB, Cognito
-- ✅ Added CORS support for cross-origin requests
-- ✅ Error handling and logging
-
-### **Phase 5: Frontend Development**
-
-- ✅ Built React app with Bootstrap UI
-- ✅ Implemented Cognito login (email + password)
-- ✅ Created upload component:
-  - File selection
-  - Document type selector (Invoice, Contract, Employee, Compliance)
-  - API integration with JWT token
-  - Success/error messages
-- ✅ Built file list component:
-  - Displays user's documents
-  - Shows expiration dates
-  - Shows days remaining
-  - Auto-refreshes after upload
-- ✅ Logout functionality
-- ✅ Local storage for JWT tokens
-
-### **Phase 6: Deployment**
-
-- ✅ Backend deployed to AWS Lambda
-- ✅ API Gateway configured with CORS
-- ✅ Frontend deployed to Vercel (auto-deploy on git push)
-- ✅ Both frontend and backend tested end-to-end
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
@@ -179,7 +117,7 @@ CS385-Project/
 
 ---
 
-## 💻 How to Run Locally
+## How to Run Locally
 
 ### Backend (API Testing)
 
@@ -212,7 +150,7 @@ Login with any email + password (MVP uses fake auth locally)
 
 ---
 
-## 🔐 Authentication Flow
+## Authentication Flow
 
 ```
 User enters email + password
@@ -229,12 +167,9 @@ API validates token
     ↓
 Request proceeds
 ```
-
-For MVP testing: Uses simple mock authentication. Production would use real Cognito validation.
-
 ---
 
-## 📊 Database Schema
+## Database Schema
 
 ### DynamoDB: cs385-metadata
 
@@ -270,7 +205,7 @@ For MVP testing: Uses simple mock authentication. Production would use real Cogn
 
 ---
 
-## 🔄 How the System Works
+## How the System Works
 
 ### **1. User Uploads a File**
 
@@ -326,7 +261,7 @@ Lambda (CS385-DeletionScheduler)
 
 ---
 
-## 🧪 Testing the Cloud App
+## Testing the Cloud App
 
 ### **Test Upload**
 
@@ -363,7 +298,7 @@ curl -X GET http://localhost:3001/files/file-id-here \
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### **Frontend (Vercel)**
 
@@ -403,22 +338,22 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
-See [Cloudformation/README.md](Cloudformation/README.md) for full deployment instructions and parameter options.
+See Cloudformation/README.md for full deployment instructions and parameter options.
 
 ---
 
 
 
-## 🔗 Links
+## Links
 
 - **GitHub:** <https://github.com/scotttennison/CS385-Project>
-- **Frontend:** <https://cs385-frontend-[vercel-url].vercel.app>
+- **Frontend:** <https://cs385-frontend.vercel.app>
 - **API Base URL:** <https://mnyt0kl257.execute-api.us-west-2.amazonaws.com/dev>
 - **Cognito User Pool:** us-west-2_xxxxx (in AWS Console)
 
 ---
 
-## 📝 Notes
+## Notes
 
 - All file deletions are **permanent** (no recovery) after expiration
 - Audit log is **immutable** (never deleted) for compliance
@@ -428,17 +363,7 @@ See [Cloudformation/README.md](Cloudformation/README.md) for full deployment ins
 
 ---
 
-## 🎓 Team
-
-- **Scott (You):** Full-stack developer, backend API, frontend, deployment
-- **Person 1:** Frontend development (ready to take over)
-- **Person 2:** Backend API (complete, ready for handoff)
-- **Person 3:** Data & security hardening
-- **Person 4:** Infrastructure as Code (Terraform)
-
----
-
-## ✨ Summary
+## Summary
 
 **Built a complete, working cloud application from scratch:**
 
@@ -449,4 +374,4 @@ See [Cloudformation/README.md](Cloudformation/README.md) for full deployment ins
 - ✅ End-to-end flow tested
 - ✅ Code version controlled on GitHub
 
-**Ready for team to integrate their pieces and deploy to production.** 🚀
+**Ready for team to integrate their pieces and deploy to production.**
