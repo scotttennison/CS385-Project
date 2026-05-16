@@ -32,9 +32,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// =====================================
+
 // MIDDLEWARE: Validate Cognito JWT Token
-// =====================================
 const authMiddleware = (req, res, next) => {
   try {
     // For LOCAL TESTING: use hardcoded user ID
@@ -69,9 +68,8 @@ const authMiddleware = (req, res, next) => {
 // Apply auth middleware to all routes
 app.use(authMiddleware);
 
-// =====================================
+
 // ENDPOINT 1: POST /upload
-// =====================================
 app.post('/upload', async (req, res) => {
   try {
     console.log(`[POST /upload] User: ${req.userId}`);
@@ -178,9 +176,7 @@ app.post('/upload', async (req, res) => {
   }
 });
 
-// =====================================
 // ENDPOINT 2: GET /files
-// =====================================
 app.get('/files', async (req, res) => {
   try {
     console.log(`[GET /files] User: ${req.userId}`);
@@ -209,9 +205,7 @@ app.get('/files', async (req, res) => {
   }
 });
 
-// =====================================
 // ENDPOINT 3: GET /files/{fileId}
-// =====================================
 app.get('/files/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
@@ -246,22 +240,16 @@ app.get('/files/:fileId', async (req, res) => {
   }
 });
 
-// =====================================
 // HEALTH CHECK
-// =====================================
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'API is running' });
 });
 
-// =====================================
 // Lambda Handler (for AWS Lambda)
-// =====================================
 const serverless = require('serverless-http');
 module.exports.handler = serverless(app);
 
-// =====================================
 // Local Testing (for development)
-// =====================================
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {
   app.listen(PORT, () => {
